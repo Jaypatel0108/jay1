@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Flappy Bird</title>
+    
+</head>
+<body>
+    <canvas id="gameCanvas" width="400" height="500"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const bird = {
+    x: 50,
+    y: canvas.height / 2,
+    radius: 15,
+    velocity: 0,
+    gravity: 0.5,
+    jumpStrength: 8,
+    color: '#ff0000'
+};
+
+let obstacles = [];
+let score = 0;
+let gameSpeed = 2;
+
+function drawBird() {
+    ctx.beginPath();
+    ctx.arc(bird.x, bird.y, bird.radius, 0, Math.PI * 2);
+    ctx.fillStyle = bird.color;
+    ctx.fill();
+    ctx.closePath();
+}
+
+function drawObstacles() {
+    obstacles.forEach(obstacle => {
+        ctx.beginPath();
+        ctx.rect(obstacle.x, 0, obstacle.width, obstacle.topHeight);
+        ctx.fillStyle = obstacle.color;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.rect(obstacle.x, canvas.height - obstacle.bottomHeight, obstacle.width, obstacle.bottomHeight);
+        ctx.fillStyle = obstacle.color;
+        ctx.fill();
+    });
+}
+
+function updateBird() {
+    bird.velocity += bird.gravity;
+    bird.y += bird.velocity;
+
+    if (bird.y + bird.radius > canvas.height) {
+        bird.y = canvas.height - bird.radius;
+        gameOver();
+    }
+}
+
+function updateObstacles() {
+    obstacles.forEach(obstacle => {
+        obstacle.x -= gameSpeed;
+
+        if (obstacle.x + obstacle.width < 0) {
+            obstacles.shift();
+            score++;
+        }
+
+        if (
+            bird.x < obstacle.x + obstacle.width &&
+            bird.x + bird.radius > obstacle.x &&
+            (bird.y < obstacle.topHeight || bird.y + bird.radius > canvas.height - obstacle.bottomHeight)
+        ) {
+            gameOver();
+        }
+    });
+}
+
+function drawScore() {
+    ctx.font = '24px Arial';
+    ctx.fillStyle = '#000';
+    ctx.fillText(`Score: ${score}`, 10, 30);
+}
+
+function gameOver() {
+    alert(`Game over! Your score: ${score}`);
+    resetGame();
+}
+
+function resetGame() {
+    bird.y = canvas.height / 2;
+    bird.velocity = 0;
+    obstacles = [];
+    score = 0;
+    gameSpeed = 2;
+}
+
+function spawnObstacle() {
+    const obstacleHeight = Math.random() * (canvas.height / 2);
+    const obstacle = {
+        x: canvas.width,
+        width: 50,
+        topHeight: obstacleHeight,
+        bottomHeight: canvas.height - obstacleHeight - 150,
+        color: `hsl(${Math.random() * 360}, 100%, 50%)`
+    };
+    obstacles.push(obstacle);
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBird();
+    drawObstacles();
+    drawScore();
+}
+
+function update() {
+    updateBird();
+    updateObstacles();
+    if (Math.random() < 0.01) spawnObstacle();
+}
+
+function gameLoop() {
+    draw();
+    update();
+    requestAnimationFrame(gameLoop);
+}
+
+document.addEventListener('keydown', e => {
+    if (e.code === 'Space') {
+        bird.velocity = -bird.jumpStrength;
+    }
+});
+
+gameLoop();
+
+    </script>
+    <style>
+        body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+}
+
+canvas {
+    border: 1px solid #000;
+    background-color: #fff;
+}
+
+    </style>
+</body>
+</html>
